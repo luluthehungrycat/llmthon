@@ -5,9 +5,9 @@
   "type": "object", "additionalProperties": false,
   "required": ["schema_version", "stdout_b64", "stderr_b64", "return_code", "elapsed_seconds", "termination", "exception_type", "limit_event", "eligible", "exclusion_reason"],
   "properties": {
-    "schema_version": {"const": 1}, "stdout_b64": {"type": "string", "contentEncoding": "base64"},
-    "stderr_b64": {"type": "string", "contentEncoding": "base64"},
-    "return_code": {"type": ["integer", "null"]}, "elapsed_seconds": {"type": "number", "minimum": 0},
+    "schema_version": {"const": 1}, "stdout_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"},
+    "stderr_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"},
+    "return_code": {"type": ["integer", "null"]}, "elapsed_seconds": {"type": "number", "minimum": 0, "maximum": 1.7976931348623157e308},
     "termination": {"enum": ["completed", "exception", "unknown"]},
     "exception_type": {"type": ["string", "null"], "pattern": "^[^.]+(?:\\.[^.]+)+$"},
     "limit_event": {"enum": ["timeout", "resource_limit", "signal", null]},

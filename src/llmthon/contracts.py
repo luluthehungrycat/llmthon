@@ -1,6 +1,7 @@
 """Version 1 contracts for cases, predictions, observations, and attempts."""
 
 from collections.abc import Mapping
+import math
 import re
 
 
@@ -12,6 +13,12 @@ QUALIFIED_TYPE = re.compile(r"^[^.]+(?:\.[^.]+)+$")
 
 def _is_int(value):
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _is_finite_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and (
+        not isinstance(value, float) or math.isfinite(value)
+    )
 
 
 def _object(document, required, where, allowed=None):
@@ -146,7 +153,7 @@ def validate_observation(document):
         errors.append("observation.return_code must be an integer or null")
     if isinstance(document["termination"], str) and document["termination"] in {"completed", "exception"} and not _is_int(code):
         errors.append("observation.return_code must be an integer for completed or exception observations")
-    if not isinstance(document["elapsed_seconds"], (int, float)) or isinstance(document["elapsed_seconds"], bool) or document["elapsed_seconds"] < 0:
+    if not _is_finite_number(document["elapsed_seconds"]) or document["elapsed_seconds"] < 0:
         errors.append("observation.elapsed_seconds must be non-negative")
     if not isinstance(document["termination"], str) or document["termination"] not in {"completed", "exception", "unknown"}:
         errors.append("observation.termination is invalid")
@@ -215,7 +222,7 @@ def validate_run_record(document):
         errors.append("run_record.decoding_settings must be an object")
     for key in ("latency_seconds", "cost_amount"):
         value = document[key]
-        if value is not None and (not isinstance(value, (int, float)) or isinstance(value, bool) or value < 0):
+        if value is not None and (not _is_finite_number(value) or value < 0):
             errors.append(f"run_record.{key} must be non-negative or null")
     for key in ("input_tokens", "output_tokens", "seed"):
         value = document[key]

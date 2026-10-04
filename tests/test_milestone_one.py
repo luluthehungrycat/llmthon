@@ -1,5 +1,6 @@
 import base64
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -92,6 +93,46 @@ class ContractFixtureTests(unittest.TestCase):
                 self.assertEqual(1, schema["properties"]["schema_version"]["const"])
                 self.assertEqual("https://json-schema.org/draft/2020-12/schema", schema["$schema"])
 
+    def test_observation_schema_base64_patterns_reject_malformed_text(self):
+        schema_path = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1" / "observation.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        for field in ("stdout_b64", "stderr_b64"):
+            pattern = schema["properties"][field]["pattern"]
+            for encoded in ("", "AA==", "AAA=", "AAAA", "YWJjZA=="):
+                with self.subTest(field=field, encoded=encoded):
+                    self.assertIsNotNone(re.fullmatch(pattern, encoded))
+            for encoded in ("A", "A===", "YWJj=", "YWJj\n", "@@==", "abcd===", "AB==", "AAF="):
+                with self.subTest(field=field, encoded=encoded):
+                    self.assertIsNone(re.fullmatch(pattern, encoded))
+
+    def test_numeric_schemas_bound_values_to_finite_float_range(self):
+        schema_dir = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1"
+        observation_schema = json.loads((schema_dir / "observation.schema.json").read_text(encoding="utf-8"))
+        run_schema = json.loads((schema_dir / "run-record.schema.json").read_text(encoding="utf-8"))
+        finite_float_max = 1.7976931348623157e308
+        self.assertEqual(finite_float_max, observation_schema["properties"]["elapsed_seconds"]["maximum"])
+        for field in ("latency_seconds", "cost_amount"):
+            with self.subTest(field=field):
+                self.assertEqual(finite_float_max, run_schema["properties"][field]["maximum"])
+
+    def test_observation_rejects_non_finite_elapsed_seconds(self):
+        for elapsed in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(elapsed=elapsed):
+                observed = observation()
+                observed["elapsed_seconds"] = elapsed
+                self.assertTrue(validate_observation(observed))
+
+    def test_run_record_rejects_non_finite_latency_and_cost(self):
+        for field in ("latency_seconds", "cost_amount"):
+            for value in (float("nan"), float("inf"), float("-inf")):
+                with self.subTest(field=field, value=value):
+                    record = load_fixture("run_record.valid.json")
+                    record[field] = value
+                    if field == "cost_amount":
+                        record["cost_currency"] = "USD"
+                        record["cost_provenance"] = "fixture"
+                    self.assertTrue(validate_run_record(record))
+
 
 class ComparisonTests(unittest.TestCase):
     def test_comparator_accepts_a_versioned_run_record_directly(self):
@@ -162,6 +203,26 @@ class ComparisonTests(unittest.TestCase):
         result = compare([row])
         self.assertEqual(0, result["denominator"])
         self.assertEqual({"profile_mismatch": 1}, result["exclusions"])
+
+    def test_planned_provider_failure_is_counted_with_limit_event_reference(self):
+        observed = observation(return_code=None, termination="unknown", limit_event="timeout")
+        result = compare([run_row(observed, attempt("provider_failure", None))])
+        self.assertEqual(0, result["denominator"])
+        self.assertEqual({"timeout": 1}, result["limit_events"])
+        self.assertEqual(1, result["attempt_failures"]["provider_failure"])
+
+    def test_planned_provider_failure_is_counted_with_ineligible_reference(self):
+        observed = observation(eligible=False, exclusion_reason="profile_mismatch")
+        result = compare([run_row(observed, attempt("provider_failure", None))])
+        self.assertEqual(0, result["denominator"])
+        self.assertEqual({"profile_mismatch": 1}, result["exclusions"])
+        self.assertEqual(1, result["attempt_failures"]["provider_failure"])
+
+    def test_planned_provider_failure_is_counted_with_non_utf8_reference(self):
+        result = compare([run_row(observation(stdout=b"\xff"), attempt("provider_failure", None))])
+        self.assertEqual(0, result["denominator"])
+        self.assertEqual({"non_utf8_output": 1}, result["exclusions"])
+        self.assertEqual(1, result["attempt_failures"]["provider_failure"])
 
     def test_timeout_and_resource_limit_are_separate_and_excluded(self):
         rows = [run_row(observation(return_code=None, termination="unknown", limit_event=event),

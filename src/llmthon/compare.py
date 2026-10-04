@@ -43,6 +43,22 @@ def compare(rows):
         if supplied_prediction is not None and supplied_prediction.get("original", {}).get("termination") == "nonterminating":
             result["nontermination_predictions"] += 1
 
+        status = attempt["status"]
+        prediction = attempt.get("prediction") if status in {"valid_prediction", "abstention"} else None
+        is_abstention = (status == "abstention" or (prediction is not None
+                         and prediction.get("original", {}).get("termination") == "unknown"))
+        if is_abstention:
+            result["attempt_failures"]["abstention"] += 1
+        elif status in {"invalid_response", "provider_failure"}:
+            result["attempt_failures"][status] += 1
+        elif status == "valid_prediction" and prediction is not None:
+            try:
+                prediction["original"]["stdout"].encode("utf-8")
+                prediction["original"]["stderr"].encode("utf-8")
+            except UnicodeEncodeError:
+                result["attempt_failures"]["invalid_response"] += 1
+                prediction = None
+
         if not observation["eligible"]:
             reason = observation["exclusion_reason"]
             result["exclusions"][reason] = result["exclusions"].get(reason, 0) + 1
@@ -65,24 +81,10 @@ def compare(rows):
 
         result["denominator"] += 1
         result["coverage"]["scored"] += 1
-        status = attempt["status"]
-        prediction = attempt.get("prediction") if status in {"valid_prediction", "abstention"} else None
-        is_abstention = (status == "abstention" or (prediction is not None
-                         and prediction.get("original", {}).get("termination") == "unknown"))
         if is_abstention:
-            result["attempt_failures"]["abstention"] += 1
             prediction = None
         if status == "valid_prediction" and prediction is not None:
-            try:
-                prediction["original"]["stdout"].encode("utf-8")
-                prediction["original"]["stderr"].encode("utf-8")
-            except UnicodeEncodeError:
-                result["attempt_failures"]["invalid_response"] += 1
-                prediction = None
-            else:
-                result["coverage"]["valid_predictions"] += 1
-        elif status in {"invalid_response", "provider_failure"}:
-            result["attempt_failures"][status] += 1
+            result["coverage"]["valid_predictions"] += 1
 
         for component in ("stdout", "stderr", "termination_exit_code"):
             result[component]["scored"] += 1

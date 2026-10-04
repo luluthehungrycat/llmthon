@@ -14,8 +14,8 @@
     "observation": {"$ref": "observation.schema.json"}, "provider": {"type": ["string", "null"], "minLength": 1}, "model": {"type": ["string", "null"], "minLength": 1},
     "prompt_template": {"type": ["string", "null"], "minLength": 1}, "prompt_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "decoding_settings": {"type": "object"},
     "context_limit": {"type": "integer", "minimum": 1}, "output_limit": {"type": "integer", "minimum": 1}, "seed": {"type": ["integer", "null"]},
-    "latency_seconds": {"type": ["number", "null"], "minimum": 0}, "input_tokens": {"type": ["integer", "null"], "minimum": 0}, "output_tokens": {"type": ["integer", "null"], "minimum": 0},
-    "cost_amount": {"type": ["number", "null"], "minimum": 0}, "cost_currency": {"type": ["string", "null"], "minLength": 1}, "cost_provenance": {"type": ["string", "null"], "minLength": 1}
+    "latency_seconds": {"type": ["number", "null"], "minimum": 0, "maximum": 1.7976931348623157e308}, "input_tokens": {"type": ["integer", "null"], "minimum": 0}, "output_tokens": {"type": ["integer", "null"], "minimum": 0},
+    "cost_amount": {"type": ["number", "null"], "minimum": 0, "maximum": 1.7976931348623157e308}, "cost_currency": {"type": ["string", "null"], "minLength": 1}, "cost_provenance": {"type": ["string", "null"], "minLength": 1}
   },
   "allOf": [
     {
