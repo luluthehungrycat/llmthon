@@ -12,7 +12,9 @@ QUALIFIED_TYPE = re.compile(r"^[^.]+(?:\.[^.]+)+$")
 
 
 def _is_int(value):
-    return isinstance(value, int) and not isinstance(value, bool)
+    return (isinstance(value, int) and not isinstance(value, bool)) or (
+        isinstance(value, float) and math.isfinite(value) and value.is_integer()
+    )
 
 
 def _is_finite_number(value):
@@ -173,6 +175,8 @@ def validate_observation(document):
         errors.append("observation.exclusion_reason must be null when eligible")
     if not document["eligible"] and (not isinstance(reason, str) or not reason):
         errors.append("observation.exclusion_reason is required when ineligible")
+    if document["termination"] == "unknown" and document["limit_event"] is None and document["eligible"]:
+        errors.append("observation with unknown termination and no limit event must be ineligible")
     return errors
 
 

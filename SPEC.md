@@ -42,6 +42,8 @@ For JSON serialization in version 1, raw stdout and stderr are base64-encoded fi
 
 A killed or timed-out reference process is an observed limit event. It does not establish mathematical nontermination. Reference infrastructure failures must be distinguished from program failures and excluded from correctness denominators, with counts disclosed.
 
+An observation with `termination: "unknown"` and no `limit_event` is ineligible and must carry an `exclusion_reason`; it cannot enter ordinary accuracy denominators.
+
 ## Comparison and reporting
 
 For the initial UTF-8 text corpus, encode predicted strings as UTF-8 and compare with raw captured bytes without stripping whitespace or normalizing newlines. Non-UTF-8 output is outside the initial scope and is ineligible with a recorded reason.

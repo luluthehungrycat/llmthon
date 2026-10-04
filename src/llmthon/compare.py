@@ -68,6 +68,10 @@ def compare(rows):
             result["limit_events"][limit_event] = result["limit_events"].get(limit_event, 0) + 1
             result["limit_event_attempts"] += 1
             continue
+        if observation["termination"] == "unknown":
+            reason = "unknown_termination"
+            result["exclusions"][reason] = result["exclusions"].get(reason, 0) + 1
+            continue
 
         observed_stdout = base64.b64decode(observation["stdout_b64"], validate=True)
         observed_stderr = base64.b64decode(observation["stderr_b64"], validate=True)

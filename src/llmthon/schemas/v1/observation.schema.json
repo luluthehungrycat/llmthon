@@ -5,8 +5,8 @@
   "type": "object", "additionalProperties": false,
   "required": ["schema_version", "stdout_b64", "stderr_b64", "return_code", "elapsed_seconds", "termination", "exception_type", "limit_event", "eligible", "exclusion_reason"],
   "properties": {
-    "schema_version": {"const": 1}, "stdout_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"},
-    "stderr_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"},
+    "schema_version": {"const": 1}, "stdout_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?(?![\\s\\S])"},
+    "stderr_b64": {"type": "string", "contentEncoding": "base64", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?(?![\\s\\S])"},
     "return_code": {"type": ["integer", "null"]}, "elapsed_seconds": {"type": "number", "minimum": 0, "maximum": 1.7976931348623157e308},
     "termination": {"enum": ["completed", "exception", "unknown"]},
     "exception_type": {"type": ["string", "null"], "pattern": "^[^.]+(?:\\.[^.]+)+$"},
@@ -16,6 +16,7 @@
   "allOf": [
     {"if": {"properties": {"eligible": {"const": true}}}, "then": {"properties": {"exclusion_reason": {"type": "null"}}}},
     {"if": {"properties": {"eligible": {"const": false}}}, "then": {"properties": {"exclusion_reason": {"type": "string", "minLength": 1}}}, "else": {}},
+    {"if": {"properties": {"termination": {"const": "unknown"}, "limit_event": {"type": "null"}}}, "then": {"properties": {"eligible": {"const": false}}}},
     {"if": {"properties": {"limit_event": {"type": "string"}}}, "then": {"properties": {"termination": {"const": "unknown"}}}},
     {"if": {"properties": {"termination": {"const": "exception"}}}, "then": {"properties": {"return_code": {"type": "integer"}}}},
     {"if": {"properties": {"termination": {"const": "completed"}}}, "then": {"properties": {"return_code": {"type": "integer"}}}},

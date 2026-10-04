@@ -13,7 +13,7 @@ Milestone 1 contracts and offline comparison are implemented. Unchecked items ar
 - [x] Implement versioned case, prediction, observation, and run-record schemas.
 - [x] Add fixtures for valid modes, exceptions, abstention, malformed output, and provider failures.
 - [x] Implement a pure comparison function with byte-exact and component scores.
-- [x] Test whitespace, traceback mismatch, missing metadata, denominators, exclusions, and limit events.
+- [x] Test whitespace, traceback mismatch, missing metadata, denominators, unknown-observation exclusions, and limit events.
 
 Gate: offline schema/comparator tests pass with no network, model requests, or submitted-code execution. Verified with the documented `PYTHONPATH=src python3 -m unittest discover -s tests -v` command on 2026-10-04.
 

@@ -85,6 +85,36 @@ class ContractFixtureTests(unittest.TestCase):
         prediction["original"]["exception_type"] = "ValueError"
         self.assertTrue(validate_prediction(prediction))
 
+    def test_integer_contract_fields_accept_integral_floats_but_reject_booleans(self):
+        for field, value in (("schema_version", 1.0),):
+            prediction = load_fixture("prediction.valid.json")
+            prediction[field] = value
+            with self.subTest(field=field, value=value):
+                self.assertEqual([], validate_prediction(prediction))
+        prediction = load_fixture("prediction.valid.json")
+        prediction["original"]["exit_code"] = 0.0
+        self.assertEqual([], validate_prediction(prediction))
+
+        for field, value in (("schema_version", True),):
+            prediction = load_fixture("prediction.valid.json")
+            prediction[field] = value
+            with self.subTest(field=field, value=value):
+                self.assertTrue(validate_prediction(prediction))
+        prediction = load_fixture("prediction.valid.json")
+        prediction["original"]["exit_code"] = True
+        self.assertTrue(validate_prediction(prediction))
+
+    def test_integer_contract_fields_reject_non_integral_and_non_finite_floats(self):
+        for value in (1.5, float("nan"), float("inf"), float("-inf")):
+            prediction = load_fixture("prediction.valid.json")
+            prediction["schema_version"] = value
+            with self.subTest(field="schema_version", value=value):
+                self.assertTrue(validate_prediction(prediction))
+            prediction = load_fixture("prediction.valid.json")
+            prediction["original"]["exit_code"] = value
+            with self.subTest(field="exit_code", value=value):
+                self.assertTrue(validate_prediction(prediction))
+
     def test_versioned_json_schemas_are_parseable(self):
         for name in ("case", "prediction", "observation", "run-record"):
             with self.subTest(schema=name):
@@ -93,17 +123,17 @@ class ContractFixtureTests(unittest.TestCase):
                 self.assertEqual(1, schema["properties"]["schema_version"]["const"])
                 self.assertEqual("https://json-schema.org/draft/2020-12/schema", schema["$schema"])
 
-    def test_observation_schema_base64_patterns_reject_malformed_text(self):
+    def test_observation_schema_base64_patterns_reject_malformed_text_using_search(self):
         schema_path = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1" / "observation.schema.json"
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         for field in ("stdout_b64", "stderr_b64"):
             pattern = schema["properties"][field]["pattern"]
             for encoded in ("", "AA==", "AAA=", "AAAA", "YWJjZA=="):
                 with self.subTest(field=field, encoded=encoded):
-                    self.assertIsNotNone(re.fullmatch(pattern, encoded))
+                    self.assertIsNotNone(re.search(pattern, encoded))
             for encoded in ("A", "A===", "YWJj=", "YWJj\n", "@@==", "abcd===", "AB==", "AAF="):
                 with self.subTest(field=field, encoded=encoded):
-                    self.assertIsNone(re.fullmatch(pattern, encoded))
+                    self.assertIsNone(re.search(pattern, encoded))
 
     def test_numeric_schemas_bound_values_to_finite_float_range(self):
         schema_dir = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1"
@@ -121,6 +151,13 @@ class ContractFixtureTests(unittest.TestCase):
                 observed = observation()
                 observed["elapsed_seconds"] = elapsed
                 self.assertTrue(validate_observation(observed))
+
+    def test_unknown_observation_without_limit_event_must_be_excluded(self):
+        observed = observation(return_code=None, termination="unknown")
+        self.assertTrue(validate_observation(observed))
+        observed["eligible"] = False
+        observed["exclusion_reason"] = "observation_unavailable"
+        self.assertEqual([], validate_observation(observed))
 
     def test_run_record_rejects_non_finite_latency_and_cost(self):
         for field in ("latency_seconds", "cost_amount"):
@@ -217,6 +254,12 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(0, result["denominator"])
         self.assertEqual({"profile_mismatch": 1}, result["exclusions"])
         self.assertEqual(1, result["attempt_failures"]["provider_failure"])
+
+    def test_unknown_observation_without_limit_event_is_excluded_even_when_eligibility_is_incorrect(self):
+        observed = observation(return_code=None, termination="unknown")
+        result = compare([run_row(observed, attempt())])
+        self.assertEqual(0, result["denominator"])
+        self.assertEqual({"unknown_termination": 1}, result["exclusions"])
 
     def test_planned_provider_failure_is_counted_with_non_utf8_reference(self):
         result = compare([run_row(observation(stdout=b"\xff"), attempt("provider_failure", None))])
