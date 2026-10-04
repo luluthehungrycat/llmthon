@@ -8,7 +8,7 @@ import re
 SCHEMA_VERSION = 1
 STATUSES = {"valid_prediction", "invalid_response", "provider_failure", "abstention"}
 TERMINATIONS = {"completed", "exception", "nonterminating", "unknown"}
-QUALIFIED_TYPE = re.compile(r"^[^.]+(?:\.[^.]+)+$")
+QUALIFIED_TYPE = re.compile(r"^[^.\r\n]+(?:\.[^.\r\n]+)+$")
 
 
 def _is_int(value):
@@ -147,7 +147,9 @@ def validate_observation(document):
     import base64
     for key in ("stdout_b64", "stderr_b64"):
         try:
-            base64.b64decode(document[key], validate=True)
+            decoded = base64.b64decode(document[key], validate=True)
+            if base64.b64encode(decoded).decode("ascii") != document[key]:
+                errors.append(f"observation.{key} must be canonical base64")
         except (ValueError, TypeError):
             errors.append(f"observation.{key} must be valid base64")
     code = document["return_code"]

@@ -17,7 +17,7 @@
   "$defs": {
     "outcome": {"type": "object", "additionalProperties": false,
       "required": ["termination", "stdout", "stderr", "exit_code", "exception_type"],
-      "properties": {"termination": {"enum": ["completed", "exception", "nonterminating", "unknown"]}, "stdout": {"type": "string"}, "stderr": {"type": "string"}, "exit_code": {"type": ["integer", "null"]}, "exception_type": {"type": ["string", "null"], "pattern": "^[^.]+(?:\\.[^.]+)+$"}},
+      "properties": {"termination": {"enum": ["completed", "exception", "nonterminating", "unknown"]}, "stdout": {"type": "string"}, "stderr": {"type": "string"}, "exit_code": {"type": ["integer", "null"]}, "exception_type": {"type": ["string", "null"], "pattern": "^[^.\\r\\n]+(?:\\.[^.\\r\\n]+)+(?![\\s\\S])"}},
       "allOf": [
         {"if": {"properties": {"termination": {"enum": ["completed", "exception"]}}}, "then": {"properties": {"exit_code": {"type": "integer"}}}},
         {"if": {"properties": {"termination": {"enum": ["nonterminating", "unknown"]}}}, "then": {"properties": {"exit_code": {"type": "null"}}}},

@@ -85,6 +85,30 @@ class ContractFixtureTests(unittest.TestCase):
         prediction["original"]["exception_type"] = "ValueError"
         self.assertTrue(validate_prediction(prediction))
 
+    def test_exception_type_rejects_trailing_newline(self):
+        prediction = load_fixture("prediction.valid.json")
+        prediction["original"]["exception_type"] = "builtins.ValueError\n"
+        self.assertTrue(validate_prediction(prediction))
+
+    def test_hashes_reject_trailing_newline(self):
+        case = load_fixture("case.valid.json")
+        case["source_sha256"] += "\n"
+        self.assertTrue(validate_case(case))
+
+        record = load_fixture("run_record.valid.json")
+        record["source_sha256"] += "\n"
+        self.assertTrue(validate_run_record(record))
+        record = load_fixture("run_record.valid.json")
+        record["prompt_sha256"] = "a" * 64 + "\n"
+        self.assertTrue(validate_run_record(record))
+
+    def test_observation_requires_canonical_base64_pad_bits(self):
+        observed = observation(stdout=b"\x00")
+        self.assertEqual("AA==", observed["stdout_b64"])
+        self.assertEqual([], validate_observation(observed))
+        observed["stdout_b64"] = "AB=="
+        self.assertTrue(validate_observation(observed))
+
     def test_integer_contract_fields_accept_integral_floats_but_reject_booleans(self):
         for field, value in (("schema_version", 1.0),):
             prediction = load_fixture("prediction.valid.json")
@@ -134,6 +158,25 @@ class ContractFixtureTests(unittest.TestCase):
             for encoded in ("A", "A===", "YWJj=", "YWJj\n", "@@==", "abcd===", "AB==", "AAF="):
                 with self.subTest(field=field, encoded=encoded):
                     self.assertIsNone(re.search(pattern, encoded))
+
+    def test_published_hash_and_qualified_type_patterns_reject_trailing_newline(self):
+        schema_dir = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1"
+        schema_fields = (
+            ("case.schema.json", "source_sha256", ("properties", "source_sha256")),
+            ("prediction.schema.json", "exception_type", ("$defs", "outcome", "properties", "exception_type")),
+            ("observation.schema.json", "exception_type", ("properties", "exception_type")),
+            ("run-record.schema.json", "source_sha256", ("properties", "source_sha256")),
+            ("run-record.schema.json", "prompt_sha256", ("properties", "prompt_sha256")),
+        )
+        for schema_name, field, path in schema_fields:
+            schema = json.loads((schema_dir / schema_name).read_text(encoding="utf-8"))
+            property_schema = schema
+            for key in path:
+                property_schema = property_schema[key]
+            pattern = property_schema["pattern"]
+            invalid = ("a" * 64 + "\n") if "[0-9a-f]" in pattern else "builtins.ValueError\n"
+            with self.subTest(schema=schema_name, field=field):
+                self.assertIsNone(re.search(pattern, invalid))
 
     def test_numeric_schemas_bound_values_to_finite_float_range(self):
         schema_dir = Path(__file__).parents[1] / "src" / "llmthon" / "schemas" / "v1"

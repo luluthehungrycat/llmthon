@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "case_id": {"type": "string", "minLength": 1},
-    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}(?![\\s\\S])"},
     "source": {"type": "string"},
     "mode": {"enum": ["strict", "vibes"]},
     "reference_profile": {
