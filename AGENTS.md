@@ -18,7 +18,7 @@ Do not add credentials to code, logs, fixtures, or commits. Real provider calls 
 
 ## Validation and reporting
 
-No build/test/lint commands exist yet. Do not claim tests pass until actual commands have run. During scaffolding, inspect relative links, tracked files, and `git diff --check`. Once tooling exists, document the exact developer commands here and in the README.
+Offline checks use `PYTHONPATH=src python3 -m unittest discover -s tests -v`; no runtime dependencies are required. Do not claim tests pass until actual commands have run. During documentation or scaffolding changes, inspect relative links, tracked files, and `git diff --check`. Keep this file and README.md in sync when developer commands change.
 
 Tests should cover observable contracts and failure paths: malformed responses, Python exceptions versus provider errors, byte-exact output, denominator accounting, timeouts, and isolation. Keep CI offline by default; real-model benchmarks are explicit opt-in runs with metadata and limits. Make no accuracy or performance claims without recorded evidence.
 

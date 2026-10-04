@@ -1,0 +1,1 @@
+{"schema_version": 1, "mode": "vibes", "original": {"termination": "exception", "stdout": "", "stderr": "ValueError: no\n", "exit_code": 1, "exception_type": "builtins.ValueError"}, "improvised": {"termination": "completed", "stdout": "fixed\n", "stderr": "", "exit_code": 0, "exception_type": null}, "repairs": ["Provide a fallback value"]}

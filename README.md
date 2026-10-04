@@ -4,7 +4,7 @@ A Python interpreter powered by predictions and audacity.
 
 LLMthon is an experimental Python execution simulator: an LLM receives Python source and predicts what running it would produce. A companion differential benchmark compares those predictions with actual Python runtimes. The joke is the premise; execution fidelity is the research question.
 
-**Status: design and folder scaffold only. No runtime, CLI, provider integration, or benchmark runner is implemented.** All commands below illustrate the proposed interface.
+**Status: milestone 1 contracts and offline comparator are implemented.** There is no runtime, CLI, provider integration, or benchmark runner. The contracts do not execute case source.
 
 ## Two modes
 
@@ -12,11 +12,21 @@ LLMthon is an experimental Python execution simulator: an LLM receives Python so
 - **Vibes:** report the predicted original outcome and a separate improvised outcome, with explicit repair descriptions. Original behaviour remains independently scoreable.
 
 ```sh
-# Proposed commands; not runnable yet.
+# Proposed future commands; not implemented yet.
 llmthon predict examples/mutable_default.py --mode strict
 llmthon predict examples/mutable_default.py --mode vibes
 llmthon benchmark benchmarks/cases --reference cpython
 ```
+
+## Offline development
+
+Requires Python 3.11 or newer. No install step is needed for offline development and the package has no runtime dependencies; run it directly from the source tree:
+
+```sh
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
+
+The version 1 JSON Schemas live in [`src/llmthon/schemas/v1/`](src/llmthon/schemas/v1/). The standard-library contract checks and pure comparator are in `src/llmthon/`. Fixtures and tests are offline; they do not call a model or execute fixture source.
 
 For the included mutable-default example, strict mode should predict `[1]` followed by `[1, 2]`. Producing `[1]` followed by `[2]` is a semantic error, even if it feels like better Python.
 
@@ -35,8 +45,8 @@ LLMthon must not secretly execute submitted Python to obtain its prediction. Onl
 | `SPEC.md` | Proposed behaviour and benchmark contract |
 | `ROADMAP.md` | Ordered milestones and completion gates |
 | `AGENTS.md` | Instructions for coding agents |
-| `src/llmthon/` | Future implementation; currently empty |
-| `tests/` | Future protocol and harness tests |
+| `src/llmthon/` | Version 1 contracts and offline comparison |
+| `tests/` | Offline contract fixtures and comparator tests |
 | `benchmarks/cases/` | Future deterministic benchmark corpus |
 | `examples/` | Small source examples, not an execution harness |
 | `docs/` | Design notes and review record |
