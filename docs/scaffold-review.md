@@ -1,5 +1,7 @@
 # Initial scaffold review
 
+Historical review of the documentation-only scaffold. Milestone 1 implementation is recorded in `ROADMAP.md`; statements below describe the repository at the time of this review.
+
 Date: 2026-10-04. Method: linus-review design/scaffold review performed by the authoring agent; this is not an independent second-model review.
 
 ## Verdict

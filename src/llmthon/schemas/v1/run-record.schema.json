@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llmthon.invalid/schemas/v1/run-record.schema.json",
+  "title": "LLMthon run record v1",
+  "description": "One planned or unplanned model attempt and its reference observation. Null usage and cost mean unknown.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "run_id", "case_id", "source_sha256", "reference_profile", "attempt_index", "repetition_index", "planned", "status", "prediction", "observation", "provider", "model", "prompt_template", "prompt_sha256", "decoding_settings", "context_limit", "output_limit", "seed", "latency_seconds", "input_tokens", "output_tokens", "cost_amount", "cost_currency", "cost_provenance"],
+  "properties": {
+    "schema_version": {"const": 1}, "run_id": {"type": "string", "minLength": 1}, "case_id": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "reference_profile": {"$ref": "case.schema.json#/properties/reference_profile"},
+    "attempt_index": {"type": "integer", "minimum": 0}, "repetition_index": {"type": "integer", "minimum": 0}, "planned": {"type": "boolean"},
+    "status": {"enum": ["valid_prediction", "invalid_response", "provider_failure", "abstention"]},
+    "prediction": {"oneOf": [{"$ref": "prediction.schema.json"}, {"type": "null"}]},
+    "observation": {"$ref": "observation.schema.json"}, "provider": {"type": ["string", "null"], "minLength": 1}, "model": {"type": ["string", "null"], "minLength": 1},
+    "prompt_template": {"type": ["string", "null"], "minLength": 1}, "prompt_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "decoding_settings": {"type": "object"},
+    "context_limit": {"type": "integer", "minimum": 1}, "output_limit": {"type": "integer", "minimum": 1}, "seed": {"type": ["integer", "null"]},
+    "latency_seconds": {"type": ["number", "null"], "minimum": 0}, "input_tokens": {"type": ["integer", "null"], "minimum": 0}, "output_tokens": {"type": ["integer", "null"], "minimum": 0},
+    "cost_amount": {"type": ["number", "null"], "minimum": 0}, "cost_currency": {"type": ["string", "null"], "minLength": 1}, "cost_provenance": {"type": ["string", "null"], "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "valid_prediction"}}},
+      "then": {"properties": {"prediction": {"$ref": "prediction.schema.json"}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["invalid_response", "provider_failure"]}}},
+      "then": {"properties": {"prediction": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"cost_amount": {"type": "number"}}},
+      "then": {"properties": {"cost_currency": {"type": "string", "minLength": 1}, "cost_provenance": {"type": "string", "minLength": 1}}}
+    }
+  ]
+}

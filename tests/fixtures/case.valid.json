@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "case_id": "hello",
+  "source_sha256": "caf026f25d7140209f98072605307a438914b9ce6f3c14b23d15d9667241de52",
+  "source": "print('hi')\n",
+  "mode": "strict",
+  "reference_profile": {
+    "implementation": "CPython", "version": "3.13.7", "operating_environment": "Linux x86_64",
+    "encoding": "UTF-8", "locale": "C.UTF-8", "timezone": "UTC", "working_directory_policy": "isolated temp directory",
+    "environment_allowlist": [], "argv": [], "stdin": "", "hash_seed": "0",
+    "resource_limits": {"cpu_seconds": 2, "wall_seconds": 3, "memory_bytes": 268435456, "process_count": 1, "output_bytes": 65536}
+  }
+}

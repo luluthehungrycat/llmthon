@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llmthon.invalid/schemas/v1/prediction.schema.json",
+  "title": "LLMthon prediction v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "mode", "original", "improvised", "repairs"],
+  "properties": {
+    "schema_version": {"const": 1}, "mode": {"enum": ["strict", "vibes"]},
+    "original": {"$ref": "#/$defs/outcome"},
+    "improvised": {"oneOf": [{"$ref": "#/$defs/outcome"}, {"type": "null"}]},
+    "repairs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "allOf": [
+    {"if": {"properties": {"mode": {"const": "strict"}}}, "then": {"properties": {"improvised": {"type": "null"}, "repairs": {"maxItems": 0}}}},
+    {"if": {"properties": {"mode": {"const": "vibes"}}}, "then": {"properties": {"improvised": {"$ref": "#/$defs/outcome"}}}}
+  ],
+  "$defs": {
+    "outcome": {"type": "object", "additionalProperties": false,
+      "required": ["termination", "stdout", "stderr", "exit_code", "exception_type"],
+      "properties": {"termination": {"enum": ["completed", "exception", "nonterminating", "unknown"]}, "stdout": {"type": "string"}, "stderr": {"type": "string"}, "exit_code": {"type": ["integer", "null"]}, "exception_type": {"type": ["string", "null"], "pattern": "^[^.]+(?:\\.[^.]+)+$"}},
+      "allOf": [
+        {"if": {"properties": {"termination": {"enum": ["completed", "exception"]}}}, "then": {"properties": {"exit_code": {"type": "integer"}}}},
+        {"if": {"properties": {"termination": {"enum": ["nonterminating", "unknown"]}}}, "then": {"properties": {"exit_code": {"type": "null"}}}},
+        {"if": {"properties": {"termination": {"const": "exception"}}}, "then": {"properties": {"exception_type": {"type": "string", "minLength": 1}}}},
+        {"if": {"properties": {"termination": {"enum": ["completed", "nonterminating", "unknown"]}}}, "then": {"properties": {"exception_type": {"type": "null"}}}}
+      ]
+    }
+  }
+}

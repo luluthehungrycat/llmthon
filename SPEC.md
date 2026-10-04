@@ -1,6 +1,6 @@
 # LLMthon specification
 
-Status: proposed v0.1 design; implementation pending. Normative words describe future acceptance criteria, not existing functionality.
+Status: proposed v0.1 design; milestone 1 schemas, structural contract checks, fixtures, and comparator are implemented. The runtime, provider, and reference runner remain future work. Normative words describe acceptance criteria.
 
 ## Purpose and scope
 
@@ -32,9 +32,13 @@ Vibes requires an improvised outcome and repairs array, possibly empty if it pre
 
 Provider timeouts, transport failures, refusals, invalid JSON, extra prose, invalid field combinations, and output-limit exhaustion are harness-level failures, not Python exceptions. Validate responses without executing them. A schema implementation and fixtures are required in milestone one before any provider integration.
 
+The versioned machine-readable contracts are published under `src/llmthon/schemas/v1/` as JSON Schema Draft 2020-12 documents. Contract checks must reject unknown fields and unsupported schema versions. A run record represents one attempt and retains its reference profile and reproducibility/cost metadata; unknown token usage or cost is `null`, never zero. Malformed provider content is recorded as an invalid response without coercing it into a prediction.
+
 ## Reference observations
 
 Record raw stdout/stderr bytes, return code, elapsed time, timeout/signal/resource-limit status, and exception type when obtained reliably. Use an explicit reference wrapper/protocol whose control channel is separate from program stdout/stderr. Handle syntax errors and runtime exceptions, distinguish intentional `SystemExit` (including nonzero exit codes) from unhandled exceptions, preserve script execution semantics, and test that the wrapper does not alter observable output. If exception extraction is unavailable or ambiguous, report it as unavailable; do not guess from arbitrary stderr text.
+
+For JSON serialization in version 1, raw stdout and stderr are base64-encoded fields and decoded back to bytes for comparison. An observation carries its termination, return code, optional exception type, limit-event kind, and eligibility/exclusion reason. An exception observation may have a null exception type when reliable extraction was unavailable.
 
 A killed or timed-out reference process is an observed limit event. It does not establish mathematical nontermination. Reference infrastructure failures must be distinguished from program failures and excluded from correctness denominators, with counts disclosed.
 
@@ -45,6 +49,8 @@ For the initial UTF-8 text corpus, encode predicted strings as UTF-8 and compare
 Report stdout match, stderr match, termination/exit-code match, exception-type match when available, and full observable exact match. Full match requires all applicable components and a normally observed completion/exception; missing exception metadata prevents full-match scoring for exceptions. Traceback differences count as stderr mismatches; a correctly predicted exception can still earn its independent component score. Do not infer exact fidelity from exception type alone.
 
 For eligible reference cases, every planned model attempt stays in the denominator: invalid responses, provider failures, and abstentions are unsuccessful attempts and reported separately. Report coverage and exclusions. Timeouts/resource limits use a separate limit-event table and are excluded from ordinary full-match accuracy; report nontermination predictions separately without labeling them proven correct.
+
+The offline comparator scores the original outcome only, including for vibes predictions. It returns numerator/denominator counts and rates for each applicable component, a full exact-match count and rate, attempt-failure counts, exclusion reasons, and separate limit-event counts. Non-UTF-8 observations are excluded with the reason `non_utf8_output` under the initial UTF-8 corpus contract.
 
 Record model identity, provider, prompt template/hash, decoding settings, context/output limits, seed when supported, repetition index, source hash, reference profile, run identifier, latency, token usage when supplied, and cost with currency/pricing provenance when known. Missing usage/cost is unknown, never zero. Cache hits are disclosed and separated from fresh-request latency. Repetitions are separate attempts; never select only the best result. No numerical semantic-similarity score in v0.1: exactness and component matches are easier to interpret.
 

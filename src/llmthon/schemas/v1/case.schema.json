@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llmthon.invalid/schemas/v1/case.schema.json",
+  "title": "LLMthon case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "case_id", "source_sha256", "source", "mode", "reference_profile"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {"type": "string"},
+    "mode": {"enum": ["strict", "vibes"]},
+    "reference_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["implementation", "version", "operating_environment", "encoding", "locale", "timezone", "working_directory_policy", "environment_allowlist", "argv", "stdin", "hash_seed", "resource_limits"],
+      "properties": {
+        "implementation": {"type": "string"}, "version": {"type": "string"},
+        "operating_environment": {"type": "string"}, "encoding": {"type": "string"},
+        "locale": {"type": "string"}, "timezone": {"type": "string"},
+        "working_directory_policy": {"type": "string"}, "environment_allowlist": {"type": "array", "items": {"type": "string"}},
+        "argv": {"type": "array", "items": {"type": "string"}}, "stdin": {"const": ""},
+        "hash_seed": {"type": "string"},
+        "resource_limits": {"type": "object", "additionalProperties": false,
+          "required": ["cpu_seconds", "wall_seconds", "memory_bytes", "process_count", "output_bytes"],
+          "properties": {"cpu_seconds": {"type": "integer", "minimum": 1}, "wall_seconds": {"type": "integer", "minimum": 1}, "memory_bytes": {"type": "integer", "minimum": 1}, "process_count": {"type": "integer", "minimum": 1}, "output_bytes": {"type": "integer", "minimum": 1}}}
+      }
+    }
+  }
+}

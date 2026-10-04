@@ -1,6 +1,6 @@
 # Roadmap
 
-Only the initial documentation and folder scaffold exist. Unchecked items are planned; no implementation completion is implied.
+Milestone 1 contracts and offline comparison are implemented. Unchecked items are planned; no implementation completion is implied.
 
 ## 0 — Agree on the experiment
 
@@ -10,12 +10,12 @@ Only the initial documentation and folder scaffold exist. Unchecked items are pl
 
 ## 1 — Contract before inference
 
-- [ ] Implement versioned case, prediction, observation, and run-record schemas.
-- [ ] Add fixtures for valid modes, exceptions, abstention, malformed output, and provider failures.
-- [ ] Implement a pure comparison function with byte-exact and component scores.
-- [ ] Test whitespace, traceback mismatch, missing metadata, denominators, exclusions, and limit events.
+- [x] Implement versioned case, prediction, observation, and run-record schemas.
+- [x] Add fixtures for valid modes, exceptions, abstention, malformed output, and provider failures.
+- [x] Implement a pure comparison function with byte-exact and component scores.
+- [x] Test whitespace, traceback mismatch, missing metadata, denominators, exclusions, and limit events.
 
-Gate: offline schema/comparator tests pass with no network, model requests, or submitted-code execution.
+Gate: offline schema/comparator tests pass with no network, model requests, or submitted-code execution. Verified with the documented `PYTHONPATH=src python3 -m unittest discover -s tests -v` command on 2026-10-04.
 
 ## 2 — One strict predictor
 
