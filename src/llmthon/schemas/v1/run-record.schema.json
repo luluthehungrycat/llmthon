@@ -20,7 +20,34 @@
   "allOf": [
     {
       "if": {"properties": {"status": {"const": "valid_prediction"}}},
-      "then": {"properties": {"prediction": {"$ref": "prediction.schema.json"}}}
+      "then": {
+        "properties": {
+          "prediction": {
+            "allOf": [
+              {"$ref": "prediction.schema.json"},
+              {"properties": {"original": {"properties": {"termination": {"not": {"const": "unknown"}}}}}}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "abstention"}}},
+      "then": {
+        "properties": {
+          "prediction": {
+            "oneOf": [
+              {"type": "null"},
+              {
+                "allOf": [
+                  {"$ref": "prediction.schema.json"},
+                  {"properties": {"original": {"properties": {"termination": {"const": "unknown"}}}}}
+                ]
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "if": {"properties": {"status": {"enum": ["invalid_response", "provider_failure"]}}},
