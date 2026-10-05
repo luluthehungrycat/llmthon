@@ -6,7 +6,7 @@ Milestone 1 contracts and offline comparison are implemented. Unchecked items ar
 
 - [x] Describe strict prediction, vibes repairs, and differential benchmarking.
 - [x] Establish scope, trust boundaries, comparison rules, and repository layout.
-- [ ] Choose the initial exact CPython version and one model/provider.
+- [x] Choose the initial exact CPython version and one model/provider (CPython 3.13.5; Requesty direct deployment IDs).
 
 ## 1 — Contract before inference
 
@@ -19,12 +19,12 @@ Gate: offline schema/comparator tests pass with no network, model requests, or s
 
 ## 2 — One strict predictor
 
-- [ ] Add one explicitly selected provider adapter, prompt template, and proposed `predict` command.
-- [ ] Enforce response validation, request timeout, context/output limits, and request/spend caps.
-- [ ] Add a mock provider for offline tests and opt-in response retention.
-- [ ] Preserve raw responses and distinguish abstention from infrastructure failure.
+- [x] Add one explicitly selected provider adapter, prompt template, and `predict` command.
+- [x] Enforce response validation, request timeout, context/output limits, and local request/spend preflight.
+- [x] Add injectable mock transport for offline tests and opt-in response retention.
+- [x] Preserve raw responses only by opt-in and distinguish abstention from provider failure.
 
-Gate: source-to-validated-prediction works; no execution tools; real requests are explicit and bounded.
+Gate: source-to-validated-prediction works; no execution tools; real requests are explicit and bounded. Verified with mocked offline tests and static checks on 2026-10-05; no live provider request was made. The spend check is a local estimate, not a provider-enforced cap.
 
 ## 3 — One isolated oracle
 

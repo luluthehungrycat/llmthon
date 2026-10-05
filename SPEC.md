@@ -1,6 +1,18 @@
 # LLMthon specification
 
-Status: proposed v0.1 design; milestone 1 schemas, structural contract checks, fixtures, and comparator are implemented. The runtime, provider, and reference runner remain future work. Normative words describe acceptance criteria.
+Status: proposed v0.1 design; milestone 1 contracts/comparison and milestone 2's bounded strict Requesty predictor are implemented. Reference execution and benchmark reporting remain future work. Normative words describe acceptance criteria.
+
+## Milestone 2: strict Requesty prediction
+
+The initial prediction prompt targets **CPython 3.13.5**. This identifies the requested prediction profile; no reference interpreter is invoked or verified by the predictor.
+
+The only provider is Requesty's OpenAI-compatible Chat Completions endpoint, `https://router.requesty.ai/v1/chat/completions`. Each invocation must choose exactly one of `openai/gpt-6-luna` or `openai/gpt-6-luna:flex`. These IDs come from the exact Requesty model catalog pages, which describe each listed deployment as direct with no routing or failover. Requesty's generic FAQ and quickstart describe automatic fallback generally; this integration records that conflicting wording as a limitation, uses no policy ID or alias, and does not retry or switch provider/model. This is not a claim about Requesty's internal infrastructure.
+
+The dated preflight schedule is $0.10 input / $0.50 output per million tokens for Luna and $0.05 / $0.25 for Luna Flex, with a 5% PAYG margin. The catalog prices are a reference estimate, not fixed provider pricing. The Luna page labels its rates updated October 3, 2026; the Luna Flex page currently labels its rates updated October 2, 2026. Both show the rates used here. If rates are unavailable in code/configuration, preflight must fail closed. The user supplies a positive finite per-invocation USD cap; the local maximum estimate must not exceed it. No provider-enforced per-request cap is claimed; the check is local only.
+
+Input is bounded to 262,144 UTF-8 bytes. Offline token preflight uses a ceiling of one token per UTF-8 byte in the fixed prompt and source, plus 1,024 tokens reserved for chat framing. This ceiling and reservation are conservative bounds, not tokenizer counts. A positive finite timeout is required. The requested context limit cannot exceed 1,100,000 tokens, output limit cannot exceed 128,000 tokens, and the local input bound plus output limit must fit the requested context limit. The request makes one transport attempt only. Redirects, retries, model switching, and provider switching are not used.
+
+Source reaches Requesty only when the caller supplies explicit `--send-to-provider` opt-in. `REQUESTY_API_KEY` is read at runtime only for that opted-in CLI invocation and is never printed or persisted. The adapter sends no tools. It requires one assistant choice with a normal stop reason and one JSON object whose strict prediction validates against the v1 contract. Refusals, truncation, malformed JSON, duplicate object keys, extra prose, and wrong structures are invalid responses; transport/HTTP failures are provider failures. Both are separate from predicted Python exceptions. Requesty usage token counts and `usage.cost` are captured when present; missing values are null. Raw response bytes are kept only when the caller opts in to response retention. No source or raw response is written by default.
 
 ## Purpose and scope
 

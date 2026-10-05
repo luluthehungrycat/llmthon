@@ -9,6 +9,9 @@ description = "Versioned contracts and offline comparison for an LLM execution p
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+llmthon = "llmthon.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
